@@ -5,10 +5,10 @@ export MY_PRIVATE_IP=`hostname -I | cut -f2 -d' '`
 # Install Ubuntu Cloud Keyring and Repository Manager
 sudo apt-get install -y software-properties-common
 
-# Install Ubuntu Cloud Archive repository for Liberty
+# Install Ubuntu Cloud Archive repository for Mitaka
 sudo add-apt-repository -y cloud-archive:mitaka
 
-# Download the latest package index to ensure you get Liberty packages
+# Download the latest package index to ensure you get Mitaka packages
 sudo apt-get update
 
 # Install Chrony
