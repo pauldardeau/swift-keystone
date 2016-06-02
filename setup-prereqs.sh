@@ -18,3 +18,4 @@ sudo apt-get install -y chrony
 chronyc sources
 
 sudo apt-get install -y curl
+sudo apt-get install -y memcached python-memcache

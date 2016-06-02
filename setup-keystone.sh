@@ -19,7 +19,6 @@ sudo apt-get update
 sudo apt-get install -y python-openstackclient
 
 sudo apt-get install -y mariadb-server python-pymysql
-sudo apt-get install -y memcached python-memcache
 sudo apt-get install -y apache2 libapache2-mod-wsgi
 sudo apt-get install -y keystone
 
