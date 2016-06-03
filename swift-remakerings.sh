@@ -40,3 +40,8 @@ swift-ring-builder account.builder add r1z2-127.0.0.1:6022/sdb2 1
 swift-ring-builder account.builder add r1z3-127.0.0.1:6032/sdb3 1
 swift-ring-builder account.builder add r1z4-127.0.0.1:6042/sdb4 1
 swift-ring-builder account.builder rebalance
+
+if [[ $EUID -eq 0 ]]; then
+   chown swift:swift * 
+fi
+
