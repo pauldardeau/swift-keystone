@@ -2,6 +2,12 @@
 
 # This script sets up Swift
 
+export OS_RELEASE="mitaka"
+export MY_PUBLIC_IP="127.0.0.1"
+export MY_IP="127.0.0.1"
+export MY_PRIVATE_IP="127.0.0.1"
+export CREDS_DIR="${HOME}/credentials"
+
 sudo apt-get -y install xfsprogs rsync
 sudo apt-get -y install swift swift-account swift-container swift-object swift-object-expirer swift-proxy python-swiftclient
 
@@ -61,7 +67,7 @@ sudo curl -o /etc/swift/proxy-server.conf https://git.openstack.org/cgit/opensta
 
 # Modify Proxy-server.conf
 sudo sed -i "s|# account_autocreate = false|account_autocreate = true|g" /etc/swift/proxy-server.conf
-sudo sed -i "s|# memcache_servers = 127.0.0.1:11211|memcache_servers = $MY_IP:11211|g" /etc/swift/proxy-server.conf
+sudo sed -i "s|# memcache_servers = 127.0.0.1:11211|memcache_servers = ${MY_IP}:11211|g" /etc/swift/proxy-server.conf
 sudo sed -i "s|# allow_versioned_writes = false|allow_versioned_writes = true|g" /etc/swift/proxy-server.conf
 
 # Set default domain id to allow use use of names in acls
@@ -114,13 +120,13 @@ sudo curl -o /etc/swift/object-server.conf https://git.openstack.org/cgit/openst
 sudo curl -o /etc/swift/object-expirer.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/object-expirer.conf-sample?=stable/${OS_RELEASE}
 
 # Modify object-expirer.conf
-sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = $MY_IP:11211|g" /etc/swift/object-expirer.conf
+sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = ${MY_IP}:11211|g" /etc/swift/object-expirer.conf
 
 # Obtain the container-reconciler configuration file from the Swift source repository 
 sudo curl -o /etc/swift/container-reconciler.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/container-reconciler.conf-sample?=stable/${OS_RELEASE}
 
 # Modify container-reconciler.conf
-sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = $MY_IP:11211|g" /etc/swift/container-reconciler.conf
+sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = ${MY_IP}:11211|g" /etc/swift/container-reconciler.conf
 
 # Obtain Swift configuration file from the Swift source repository 
 sudo curl -o /etc/swift/swift.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/swift.conf-sample?h=stable/${OS_RELEASE}
@@ -128,13 +134,13 @@ sudo curl -o /etc/swift/swift.conf https://git.openstack.org/cgit/openstack/swif
 sudo chown -R root:swift /etc/swift
 
 # Create the credentials file for the swiftadmin account
-cat >> ~/credentials/swiftadmin <<EOF
+cat > ${CREDS_DIR}/swiftadmin <<EOF
 export OS_PROJECT_DOMAIN_NAME=default
 export OS_USER_DOMAIN_NAME=default
 export OS_PROJECT_NAME=MyProject
 export OS_USERNAME=swiftadmin
 export OS_PASSWORD=mypassword
-export OS_AUTH_URL=http://$MY_IP:5000/v3
+export OS_AUTH_URL=http://${MY_IP}:5000/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
 EOF
@@ -144,24 +150,24 @@ cd /etc/swift
 
 # Create the object ring
 sudo swift-ring-builder object.builder create 9 3 1
-sudo swift-ring-builder object.builder add r1z1-$MY_PRIVATE_IP:6000/loop2 1000
-sudo swift-ring-builder object.builder add r1z2-$MY_PRIVATE_IP:6000/loop3 1000
-sudo swift-ring-builder object.builder add r1z3-$MY_PRIVATE_IP:6000/loop4 1000
-sudo swift-ring-builder object.builder add r1z4-$MY_PRIVATE_IP:6000/loop5 1000
+sudo swift-ring-builder object.builder add r1z1-${MY_PRIVATE_IP}:6000/loop2 1000
+sudo swift-ring-builder object.builder add r1z2-${MY_PRIVATE_IP}:6000/loop3 1000
+sudo swift-ring-builder object.builder add r1z3-${MY_PRIVATE_IP}:6000/loop4 1000
+sudo swift-ring-builder object.builder add r1z4-${MY_PRIVATE_IP}:6000/loop5 1000
 
 # Create the container ring
 sudo swift-ring-builder container.builder create 9 3 1
-sudo swift-ring-builder container.builder add r1z1-$MY_PRIVATE_IP:6001/loop2 1000
-sudo swift-ring-builder container.builder add r1z2-$MY_PRIVATE_IP:6001/loop3 1000
-sudo swift-ring-builder container.builder add r1z3-$MY_PRIVATE_IP:6001/loop4 1000
-sudo swift-ring-builder container.builder add r1z4-$MY_PRIVATE_IP:6001/loop5 1000
+sudo swift-ring-builder container.builder add r1z1-${MY_PRIVATE_IP}:6001/loop2 1000
+sudo swift-ring-builder container.builder add r1z2-${MY_PRIVATE_IP}:6001/loop3 1000
+sudo swift-ring-builder container.builder add r1z3-${MY_PRIVATE_IP}:6001/loop4 1000
+sudo swift-ring-builder container.builder add r1z4-${MY_PRIVATE_IP}:6001/loop5 1000
 
 # Create the account ring
 sudo swift-ring-builder account.builder create 9 3 1
-sudo swift-ring-builder account.builder add r1z1-$MY_PRIVATE_IP:6002/loop2 1000
-sudo swift-ring-builder account.builder add r1z2-$MY_PRIVATE_IP:6002/loop3 1000
-sudo swift-ring-builder account.builder add r1z3-$MY_PRIVATE_IP:6002/loop4 1000
-sudo swift-ring-builder account.builder add r1z4-$MY_PRIVATE_IP:6002/loop5 1000
+sudo swift-ring-builder account.builder add r1z1-${MY_PRIVATE_IP}:6002/loop2 1000
+sudo swift-ring-builder account.builder add r1z2-${MY_PRIVATE_IP}:6002/loop3 1000
+sudo swift-ring-builder account.builder add r1z3-${MY_PRIVATE_IP}:6002/loop4 1000
+sudo swift-ring-builder account.builder add r1z4-${MY_PRIVATE_IP}:6002/loop5 1000
 
 # Verify the contents of each ring
 sudo swift-ring-builder object.builder
