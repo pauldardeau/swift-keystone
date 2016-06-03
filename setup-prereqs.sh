@@ -2,6 +2,8 @@
 
 # this script sets up prerequisites for swift-keystone
 
+export OS_RELEASE="mitaka"
+
 # Install Ubuntu Cloud Keyring and Repository Manager
 sudo apt-get install -y software-properties-common
 
