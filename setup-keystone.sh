@@ -2,11 +2,12 @@
 
 # This script sets up Keystone
 
-sudo apt-get install -y python-openstackclient
+export OS_RELEASE="mitaka"
+export MY_PUBLIC_IP="127.0.0.1"
+export MY_IP="127.0.0.1"
+export MY_PRIVATE_IP="127.0.0.1"
 
-sudo apt-get install -y mariadb-server python-pymysql
-sudo apt-get install -y apache2 libapache2-mod-wsgi
-sudo apt-get install -y keystone
+sudo apt-get install -y python-openstackclient
 
 # Preseed MariaDB install
 cat <<EOF | sudo debconf-set-selections
@@ -15,8 +16,13 @@ mariadb-server-5.5 mysql-server/root_password_again password notmysql
 mariadb-server-5.5 mysql-server/start_on_boot boolean true
 EOF
 
-sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
-sudo sed -i "s|127.0.0.1|$MY_PRIVATE_IP|g" /etc/memcached.conf
+sudo apt-get install -y mariadb-server
+sudo pip install PyMySQL
+sudo apt-get install -y apache2 libapache2-mod-wsgi
+sudo apt-get install -y keystone
+
+sudo sed -i "s/127.0.0.1/${MY_PRIVATE_IP}\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
+sudo sed -i "s|127.0.0.1|${MY_PRIVATE_IP}|g" /etc/memcached.conf
 
 sudo service mysql restart
 sudo service memcached restart
@@ -30,6 +36,7 @@ EOF
 echo manual | sudo tee /etc/init/keystone.override
 
 # Create Keystone database
+mysql -u root -pnotmysql -e "DROP DATABASE keystone;"
 mysql -u root -pnotmysql -e "CREATE DATABASE keystone;"
 mysql -u root -pnotmysql -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'notkeystone';"
 mysql -u root -pnotmysql -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'notkeystone';"
@@ -95,16 +102,16 @@ sudo pgrep -l apache2
 
 # Export Keystone "service" credentials to populate service catalog and create first user / tenant
 export OS_TOKEN=ADMIN
-export OS_URL=http://$MY_IP:35357/v3
+export OS_URL=http://${MY_IP}:35357/v3
 export OS_IDENTITY_API_VERSION=3
 
 # Populate service in service catalog
 openstack service create --name keystone --description "OpenStack Identity" identity
 openstack service list
 
-openstack endpoint create --region RegionOne identity public http://$MY_PUBLIC_IP:5000/v3
-openstack endpoint create --region RegionOne identity internal http://$MY_IP:5000/v3
-openstack endpoint create --region RegionOne identity admin http://$MY_IP:35357/v3
+openstack endpoint create --region RegionOne identity public http://${MY_PUBLIC_IP}:5000/v3
+openstack endpoint create --region RegionOne identity internal http://${MY_IP}:5000/v3
+openstack endpoint create --region RegionOne identity admin http://${MY_IP}:35357/v3
 openstack endpoint list
 
 openstack domain create --description "Default Domain" default
@@ -130,27 +137,33 @@ openstack role list --project MyProject --user myadmin
 unset OS_TOKEN
 unset OS_URL
 
+CREDS_DIR="${HOME}/credentials"
 
-mkdir ~/credentials
+if [ -d ${CREDS_DIR} ]; then
+  rm -f "${CREDS_DIR}/myadmin"
+  rm -f "${CREDS_DIR}/myuser"
+else
+  mkdir ${CREDS_DIR}
+fi
 
-cat >> ~/credentials/myadmin <<EOF
+cat > ${CREDS_DIR}/myadmin <<EOF
 export OS_PROJECT_DOMAIN_NAME=default
 export OS_USER_DOMAIN_NAME=default
 export OS_PROJECT_NAME=MyProject
 export OS_USERNAME=myadmin
 export OS_PASSWORD=mypassword
-export OS_AUTH_URL=http://$MY_IP:35357/v3
+export OS_AUTH_URL=http://${MY_IP}:35357/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
 EOF
 
-cat >> ~/credentials/myuser <<EOF
+cat > ${CREDS_DIR}/myuser <<EOF
 export OS_PROJECT_DOMAIN_NAME=default
 export OS_USER_DOMAIN_NAME=default
 export OS_PROJECT_NAME=MyProject
 export OS_USERNAME=myuser
 export OS_PASSWORD=mypassword
-export OS_AUTH_URL=http://$MY_IP:5000/v3
+export OS_AUTH_URL=http://${MY_IP}:5000/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
 EOF
