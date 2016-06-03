@@ -2,7 +2,7 @@
 
 This project sets up OpenStack Keystone and Swift to be integrated and run on a single machine.
 
-The starting point for this project is *setup.sh*
+The starting point for this project is **setup.sh**
 
 
 OpenStack Components
