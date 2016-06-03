@@ -8,59 +8,12 @@ export MY_IP="127.0.0.1"
 export MY_PRIVATE_IP="127.0.0.1"
 export CREDS_DIR="${HOME}/credentials"
 
-sudo apt-get -y install xfsprogs rsync
+sudo apt-get -y install rsync
 sudo apt-get -y install swift swift-account swift-container swift-object swift-object-expirer swift-proxy python-swiftclient
 
-sudo chown -R swift: /var/cache/swift
-
-# Set up the filesystems
-sudo mkfs.xfs -f -i size=1024 /dev/loop2
-sudo mkfs.xfs -f -i size=1024 /dev/loop3
-sudo mkfs.xfs -f -i size=1024 /dev/loop4
-sudo mkfs.xfs -f -i size=1024 /dev/loop5
-sudo mkfs.xfs -f -i size=1024 /dev/loop6
-sudo mkfs.xfs -f -i size=1024 /dev/loop7
-
-# Create the mount points
-sudo mkdir -p /srv/node/loop{2,3,4,5,6,7}
-
-# Setup drives to be mounted in /etc/fstab (notice noauto)
-( cat | sudo tee -a /etc/fstab ) <<EOF
-/dev/loop2 /srv/node/loop2 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-/dev/loop3 /srv/node/loop3 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-/dev/loop4 /srv/node/loop4 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-/dev/loop5 /srv/node/loop5 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-/dev/loop6 /srv/node/loop6 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-/dev/loop7 /srv/node/loop7 xfs noauto,noatime,nodiratime,nobarrier,logbufs=8 0 0
-EOF
-
-# Mount the drives now
-sudo mount /srv/node/loop2
-sudo mount /srv/node/loop3
-sudo mount /srv/node/loop4
-sudo mount /srv/node/loop5
-sudo mount /srv/node/loop6
-sudo mount /srv/node/loop7
-
-# Mount the drives at boot
-( cat | sudo tee /etc/rc.local ) <<EOF
-#!/bin/sh -e
-
-mount /srv/node/loop2
-mount /srv/node/loop3
-mount /srv/node/loop4
-mount /srv/node/loop5
-mount /srv/node/loop6
-mount /srv/node/loop7
-
-exit 0
-EOF
-
-# Ensure swift user owns everything
-sudo chown -R swift: /srv/node
-
-# Make /etc/swift directory
 sudo mkdir -p /etc/swift
+sudo chown -R swift:swift /var/cache/swift
+sudo chown -R swift:swift /etc/swift
 
 # Obtain the proxy service configuration file from the Swift source repository
 sudo curl -o /etc/swift/proxy-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/proxy-server.conf-sample?h=stable/${OS_RELEASE}
@@ -131,8 +84,6 @@ sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_serve
 # Obtain Swift configuration file from the Swift source repository 
 sudo curl -o /etc/swift/swift.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/swift.conf-sample?h=stable/${OS_RELEASE}
 
-sudo chown -R root:swift /etc/swift
-
 # Create the credentials file for the swiftadmin account
 cat > ${CREDS_DIR}/swiftadmin <<EOF
 export OS_PROJECT_DOMAIN_NAME=default
@@ -145,44 +96,3 @@ export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
 EOF
 
-# Create the rings
-cd /etc/swift
-
-# Create the object ring
-sudo swift-ring-builder object.builder create 9 3 1
-sudo swift-ring-builder object.builder add r1z1-${MY_PRIVATE_IP}:6000/loop2 1000
-sudo swift-ring-builder object.builder add r1z2-${MY_PRIVATE_IP}:6000/loop3 1000
-sudo swift-ring-builder object.builder add r1z3-${MY_PRIVATE_IP}:6000/loop4 1000
-sudo swift-ring-builder object.builder add r1z4-${MY_PRIVATE_IP}:6000/loop5 1000
-
-# Create the container ring
-sudo swift-ring-builder container.builder create 9 3 1
-sudo swift-ring-builder container.builder add r1z1-${MY_PRIVATE_IP}:6001/loop2 1000
-sudo swift-ring-builder container.builder add r1z2-${MY_PRIVATE_IP}:6001/loop3 1000
-sudo swift-ring-builder container.builder add r1z3-${MY_PRIVATE_IP}:6001/loop4 1000
-sudo swift-ring-builder container.builder add r1z4-${MY_PRIVATE_IP}:6001/loop5 1000
-
-# Create the account ring
-sudo swift-ring-builder account.builder create 9 3 1
-sudo swift-ring-builder account.builder add r1z1-${MY_PRIVATE_IP}:6002/loop2 1000
-sudo swift-ring-builder account.builder add r1z2-${MY_PRIVATE_IP}:6002/loop3 1000
-sudo swift-ring-builder account.builder add r1z3-${MY_PRIVATE_IP}:6002/loop4 1000
-sudo swift-ring-builder account.builder add r1z4-${MY_PRIVATE_IP}:6002/loop5 1000
-
-# Verify the contents of each ring
-sudo swift-ring-builder object.builder
-sudo swift-ring-builder container.builder
-sudo swift-ring-builder account.builder
-
-# Rebalance each ring using a seed value
-sudo swift-ring-builder object.builder rebalance 1337
-sudo swift-ring-builder container.builder rebalance 1337
-sudo swift-ring-builder account.builder rebalance 1337
-
-# Notice the distribution of partitions amongst the storage locations
-sudo swift-ring-builder object.builder
-sudo swift-ring-builder container.builder
-sudo swift-ring-builder account.builder
-
-# Ensure all files are owned by swift
-sudo chown -R swift: /etc/swift
