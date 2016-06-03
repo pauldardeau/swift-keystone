@@ -2,10 +2,6 @@
 
 # This script sets up Swift
 
-export MY_PUBLIC_IP=`hostname -I | cut -f1 -d' '`
-export MY_IP=`hostname -I | cut -f2 -d' '`
-export MY_PRIVATE_IP=`hostname -I | cut -f2 -d' '`
-
 sudo apt-get -y install xfsprogs rsync
 sudo apt-get -y install swift swift-account swift-container swift-object swift-object-expirer swift-proxy python-swiftclient
 
@@ -61,7 +57,7 @@ sudo chown -R swift: /srv/node
 sudo mkdir -p /etc/swift
 
 # Obtain the proxy service configuration file from the Swift source repository
-sudo curl -o /etc/swift/proxy-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/proxy-server.conf-sample?h=stable/mitaka
+sudo curl -o /etc/swift/proxy-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/proxy-server.conf-sample?h=stable/${OS_RELEASE}
 
 # Modify Proxy-server.conf
 sudo sed -i "s|# account_autocreate = false|account_autocreate = true|g" /etc/swift/proxy-server.conf
@@ -105,29 +101,29 @@ EOF
 sudo service rsync restart
 
 # Obtain the account server config file
-sudo curl -o /etc/swift/account-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/account-server.conf-sample?=stable/mitaka
+sudo curl -o /etc/swift/account-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/account-server.conf-sample?=stable/${OS_RELEASE}
 
 # Modify account-server.conf
 sudo sed -i "s|bind_port = 6202|bind_port = 6002|g" /etc/swift/account-server.conf
 
 # Obtain the container and object server config files
-sudo curl -o /etc/swift/container-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/container-server.conf-sample?h=stable/mitaka
-sudo curl -o /etc/swift/object-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/object-server.conf-sample?h=stable/mitaka
+sudo curl -o /etc/swift/container-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/container-server.conf-sample?h=stable/${OS_RELEASE}
+sudo curl -o /etc/swift/object-server.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/object-server.conf-sample?h=stable/${OS_RELEASE}
 
 # Obtain the object-expirer configuration file from the Swift source repository 
-sudo curl -o /etc/swift/object-expirer.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/object-expirer.conf-sample?=stable/mitaka
+sudo curl -o /etc/swift/object-expirer.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/object-expirer.conf-sample?=stable/${OS_RELEASE}
 
 # Modify object-expirer.conf
 sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = $MY_IP:11211|g" /etc/swift/object-expirer.conf
 
 # Obtain the container-reconciler configuration file from the Swift source repository 
-sudo curl -o /etc/swift/container-reconciler.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/container-reconciler.conf-sample?=stable/mitaka
+sudo curl -o /etc/swift/container-reconciler.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/container-reconciler.conf-sample?=stable/${OS_RELEASE}
 
 # Modify container-reconciler.conf
 sudo sed -i "s|use = egg:swift#memcache|use = egg:swift#memcache\nmemcache_servers = $MY_IP:11211|g" /etc/swift/container-reconciler.conf
 
 # Obtain Swift configuration file from the Swift source repository 
-sudo curl -o /etc/swift/swift.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/swift.conf-sample?h=stable/mitaka
+sudo curl -o /etc/swift/swift.conf https://git.openstack.org/cgit/openstack/swift/plain/etc/swift.conf-sample?h=stable/${OS_RELEASE}
 
 sudo chown -R root:swift /etc/swift
 

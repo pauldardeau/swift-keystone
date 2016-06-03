@@ -6,6 +6,8 @@ export MY_PUBLIC_IP=`hostname -I | cut -f1 -d' '`
 export MY_IP=`hostname -I | cut -f2 -d' '`
 export MY_PRIVATE_IP=`hostname -I | cut -f2 -d' '`
 
+export OS_RELEASE="mitaka"
+
 ./setup-prereqs.sh
 ./setup-keystone.sh
 ./setup-swift.sh

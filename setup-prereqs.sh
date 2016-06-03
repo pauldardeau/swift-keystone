@@ -5,10 +5,10 @@
 # Install Ubuntu Cloud Keyring and Repository Manager
 sudo apt-get install -y software-properties-common
 
-# Install Ubuntu Cloud Archive repository for Mitaka
-sudo add-apt-repository -y cloud-archive:mitaka
+# Install Ubuntu Cloud Archive repository for our OpenStack release
+sudo add-apt-repository -y cloud-archive:${OS_RELEASE}
 
-# Download the latest package index to ensure you get Mitaka packages
+# Download the latest package index to ensure you get packages corresponding to your OpenStack release
 sudo apt-get update
 
 # Install Chrony

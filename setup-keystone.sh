@@ -2,20 +2,6 @@
 
 # This script sets up Keystone
 
-# capture our ip addresses
-export MY_PUBLIC_IP=`hostname -I | cut -f1 -d' '`
-export MY_IP=`hostname -I | cut -f2 -d' '`
-export MY_PRIVATE_IP=`hostname -I | cut -f2 -d' '`
-
-# install dependencies
-sudo apt-get install -y software-properties-common
-sudo add-apt-repository -y cloud-archive:mitaka
-sudo apt-get install -y chrony
-# Verify time sources
-chronyc sources
-
-# Download the latest package index to ensure you get Mitaka packages
-sudo apt-get update
 sudo apt-get install -y python-openstackclient
 
 sudo apt-get install -y mariadb-server python-pymysql
@@ -59,7 +45,7 @@ sudo -u keystone keystone-manage db_sync
 # Initialize Fernet keys
 sudo keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
 
-# Verify version of Keystone Package (Mitaka == 2:9.0.0-0ubuntu1)
+# Verify version of Keystone Package
 sudo dpkg -p keystone | grep "Version:"
 
 
